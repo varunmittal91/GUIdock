@@ -4,7 +4,7 @@ MAINTAINER Somebody <somebody@acme.com>
 ENV DEBIAN_FRONTEND noninteractive
 ENV HOME /root
 RUN apt-get update
-RUN apt-get install -y --force-yes --no-install-recommends software-properties-common
+RUN apt-get install -y --force-yes --no-install-recommends software-properties-common apt-transport-https
 #GUIdock.json
 #cynetwork_bma.json
 #cytoscape_3_3.json
@@ -15,8 +15,8 @@ RUN apt-get install -y --force-yes --no-install-recommends openjdk-8-jre
 #--
 add http://chianti.ucsd.edu/cytoscape-3.3.0/cytoscape-3.3.0.tar.gz /deps/cytoscape-3.3.0.tar.gz
 #--
-add lib/cytoscape_3_3/cytoscape_setup.sh /81e383d2-b8d0-46c8-ac8b-2783eaacc07e
-add lib/cynetwork_bma/CyNetworkBMA-1.0.0_1.jar /deps/CytoscapeConfiguration/3/apps/installed/CyNetworkBMA-1.0.0_1.jar
+add lib/cytoscape_3_3/cytoscape_setup.sh /1e0eae89-350b-4deb-98cd-cb46c6298bc3
+add lib/cynetwork_bma/CyNetworkBMA-1.0.0_1.jar /deps/cytoscape-unix-3.3.0/apps/CyNetworkBMA-1.0.0_1.jar
 #--
 #r.json
 RUN apt-get install -y --force-yes --no-install-recommends apt-transport-https
@@ -37,7 +37,7 @@ RUN pip install librabbitmq mongoengine
 RUN apt-get purge -y --force-yes python-pip build-essential python-dev
 copy lib/broker_base/broker.tar.gz /
 #--
-add lib/broker_base/init.sh /7e1a6bb2-cd08-4db1-9c9b-1483059ddbf6
+add lib/broker_base/init.sh /21341dae-b1dd-469e-8046-05754dd42903
 RUN apt-get install -y --force-yes --no-install-recommends supervisor openssh-server pwgen sudo vim-tiny
 RUN apt-get install -y --force-yes --no-install-recommends net-tools lxde x11vnc x11vnc-data xvfb
 RUN apt-get install -y --force-yes --no-install-recommends gtk2-engines-murrine ttf-ubuntu-font-family
@@ -54,8 +54,9 @@ add lib/novnc/supervisord.conf /etc/supervisor/conf.d/
 add lib/novnc/doro-lxde-wallpapers /usr/share/doro-lxde-wallpapers/
 #--
 copy lib/GUIdock/DEMO.tar.gz /
+copy lib/GUIdock/rserve.R /deps/
 #--
-add lib/GUIdock/init.sh /1730aa02-d1bb-48ad-9129-9895c9b1ef3c
+add lib/GUIdock/init.sh /d45bae3c-22a2-41ed-9adc-e8081dc5c5f8
 RUN apt-get purge software-properties-common -y --force-yes
 RUN apt-get -y autoclean
 RUN apt-get -y autoremove
@@ -63,6 +64,6 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN rm -rf /tmp/*
 RUN rm -rf /var/tmp/*
 EXPOSE 6080
-RUN bash -c 'echo -e "#!/bin/bash\nchmod +x /81e383d2-b8d0-46c8-ac8b-2783eaacc07e\n/81e383d2-b8d0-46c8-ac8b-2783eaacc07e\nrm -rf /81e383d2-b8d0-46c8-ac8b-2783eaacc07e\nchmod +x /7e1a6bb2-cd08-4db1-9c9b-1483059ddbf6\n/7e1a6bb2-cd08-4db1-9c9b-1483059ddbf6\nchmod +x /1730aa02-d1bb-48ad-9129-9895c9b1ef3c\n/1730aa02-d1bb-48ad-9129-9895c9b1ef3c\nrm -rf /1730aa02-d1bb-48ad-9129-9895c9b1ef3c\n/startup.sh" >> /entrypoint.sh'
+RUN bash -c 'echo -e "#!/bin/bash\nchmod +x /1e0eae89-350b-4deb-98cd-cb46c6298bc3\n/1e0eae89-350b-4deb-98cd-cb46c6298bc3\nrm -rf /1e0eae89-350b-4deb-98cd-cb46c6298bc3\nchmod +x /21341dae-b1dd-469e-8046-05754dd42903\n/21341dae-b1dd-469e-8046-05754dd42903\nchmod +x /d45bae3c-22a2-41ed-9adc-e8081dc5c5f8\n/d45bae3c-22a2-41ed-9adc-e8081dc5c5f8\nrm -rf /d45bae3c-22a2-41ed-9adc-e8081dc5c5f8\n/startup.sh" >> /entrypoint.sh'
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
