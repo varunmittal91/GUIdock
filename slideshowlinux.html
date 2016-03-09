@@ -1,0 +1,45 @@
+<html>
+<head>
+<script type="text/javascript">
+
+var slideimages = new Array() // create new array to preload images
+slideimages[0] = new Image() // create new instance of image object
+slideimages[0].src = "step1.png" // set image src property to image path, preloading image in the process
+slideimages[1] = new Image()
+slideimages[1].src = "step2.png"
+slideimages[2] = new Image()
+slideimages[2].src = "step3.png"
+slideimages[3] = new Image()
+slideimages[3].src = "step4.png"
+slideimages[4] = new Image()
+slideimages[4].src = "step5.png"
+slideimages[5] = new Image()
+slideimages[5].src = "step6.png"
+
+</script>
+</head>
+<body bgcolor="purple">
+<center><img src="step1.png" id="slide" width=900 height=460 /></center>
+
+<script type="text/javascript">
+
+//variable that will increment through the images
+var step=0
+
+function slideit(){
+  if (!document.images)
+  return
+ document.getElementById('slide').src = slideimages[step].src
+ if (step<5)
+  step++
+ else
+  step=0
+ //call function "slideit()" every 4 seconds
+ setTimeout("slideit()",4000)
+}
+
+slideit()
+
+</script>
+</body>
+</html>
