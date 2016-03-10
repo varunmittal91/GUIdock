@@ -15,7 +15,7 @@ RUN apt-get install -y --force-yes --no-install-recommends openjdk-8-jre
 #--
 add http://chianti.ucsd.edu/cytoscape-3.3.0/cytoscape-3.3.0.tar.gz /deps/cytoscape-3.3.0.tar.gz
 #--
-add lib/cytoscape_3_3/cytoscape_setup.sh /e456e900-ad02-4822-8068-78c2c12be3d3
+add lib/cytoscape_3_3/cytoscape_setup.sh /dd78c90a-ef4f-49e0-9e53-607e8aeeb99b
 add lib/cynetwork_bma/CyNetworkBMA-1.0.0_1.jar /deps/cytoscape-unix-3.3.0/apps/CyNetworkBMA-1.0.0_1.jar
 #--
 #r.json
@@ -37,7 +37,7 @@ RUN pip install librabbitmq mongoengine
 RUN apt-get purge -y --force-yes python-pip build-essential python-dev
 copy lib/broker_base/broker.tar.gz /
 #--
-add lib/broker_base/init.sh /41ad684e-374f-45e9-95d2-f25a7c12c486
+add lib/broker_base/init.sh /0e249891-b18f-48ef-8a4f-3cb540aa2847
 RUN apt-get install -y --force-yes --no-install-recommends supervisor openssh-server pwgen sudo vim-tiny
 RUN apt-get install -y --force-yes --no-install-recommends net-tools lxde x11vnc x11vnc-data xvfb
 RUN apt-get install -y --force-yes --no-install-recommends gtk2-engines-murrine ttf-ubuntu-font-family
@@ -56,7 +56,7 @@ add lib/novnc/doro-lxde-wallpapers /usr/share/doro-lxde-wallpapers/
 copy lib/GUIdock/DEMO.tar.gz /
 copy lib/GUIdock/rserve.R /deps/
 #--
-add lib/GUIdock/init.sh /49231f1a-b2c6-42d3-8fb2-37dec637fd68
+add lib/GUIdock/init.sh /20d83fbb-296c-4379-832f-36ba1894f03b
 RUN apt-get purge software-properties-common -y --force-yes
 RUN apt-get -y autoclean
 RUN apt-get -y autoremove
@@ -64,6 +64,6 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN rm -rf /tmp/*
 RUN rm -rf /var/tmp/*
 EXPOSE 6080
-RUN bash -c 'echo -e "#!/bin/bash\nchmod +x /e456e900-ad02-4822-8068-78c2c12be3d3\n/e456e900-ad02-4822-8068-78c2c12be3d3\nrm -rf /e456e900-ad02-4822-8068-78c2c12be3d3\nchmod +x /41ad684e-374f-45e9-95d2-f25a7c12c486\n/41ad684e-374f-45e9-95d2-f25a7c12c486\nchmod +x /49231f1a-b2c6-42d3-8fb2-37dec637fd68\n/49231f1a-b2c6-42d3-8fb2-37dec637fd68\n/startup.sh" >> /entrypoint.sh'
+RUN bash -c 'echo -e "#!/bin/bash\nchmod +x /dd78c90a-ef4f-49e0-9e53-607e8aeeb99b\n/bin/bash /dd78c90a-ef4f-49e0-9e53-607e8aeeb99b\nrm -rf /dd78c90a-ef4f-49e0-9e53-607e8aeeb99b\nchmod +x /0e249891-b18f-48ef-8a4f-3cb540aa2847\n/bin/bash /0e249891-b18f-48ef-8a4f-3cb540aa2847\nchmod +x /20d83fbb-296c-4379-832f-36ba1894f03b\n/bin/bash /20d83fbb-296c-4379-832f-36ba1894f03b\n/startup.sh" >> /entrypoint.sh'
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
