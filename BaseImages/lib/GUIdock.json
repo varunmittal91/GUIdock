@@ -1,6 +1,9 @@
 {
    "maintainer": ["Varun Mittal <varun91@uw.edu>"],
    "commands": [
+      ["add", "deps.R /tmp/deps.R"],
+      "Rscript /tmp/deps.R",
+      "rm /tmp/deps.R",
       ["copy", "DEMO.tar.gz /"],
       ["copy", "rserve.R /deps/"]
    ],

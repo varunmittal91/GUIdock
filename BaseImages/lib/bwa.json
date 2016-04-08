@@ -1,0 +1,7 @@
+{
+   "maintainer": ["Varun Mittal <varun91@uw.edu>"],
+   "commands": [
+      ["install", "bwa"]
+   ],
+   "env_home": "/root/"
+}
