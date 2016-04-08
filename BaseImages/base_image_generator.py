@@ -3,11 +3,13 @@
 from json import load
 from urlparse import urlparse
 
-def process_add(command, arg, dep):
+import logging
+
+def process_add(command, arg, dep, lib_path):
     src,dst = arg.split()
     urlparts = urlparse(src)
     if not urlparts.scheme or urlparts.scheme == 'file':
-        src = "lib/%s/%s" % (dep,urlparts.path)
+        src = "%s/%s" % (lib_path,urlparts.path)
         arg = "%s %s" % (src,dst)
     return command,arg
 
@@ -22,14 +24,40 @@ command_dict = {
 
 def load_dep(dep, commands=[], expose_ports=[], entry_points=[], scripts=[], env=[], workdir=[], contributors=[], maintainers=[],
                  add_repos=[], install_packages=[], purge_packages=[]):
-    path = "lib/%s.json" % dep
+    # Check if the dependency is git repository, by default assumed to be local plugin in ./lib
+    type = "local"
+    lib_path = None
+    try:
+        type,repo = dep.split('/', 1)
+        # Path to sync repo
+        repo_path = "repos/%s" % repo
+        repo_url  = "http://github.com/%s" % repo
+
+        # Capture output of git clone
+        from subprocess import call
+        command = ["git", "clone", repo_url, repo_path]
+        status  = 0
+        status  = call(command)
+        if status == 128:
+            logging.debug("# Assuming directory was already created by previous sync, attempting to pull the latest changes")
+        command = ["git", "--work-tree", repo_path, "pull"]
+        status = call(command)
+        if status != 0:
+            print("Failed to import git repo: %s" % repo_url)
+            exit(1)
+        path = "%s/dep.json" % repo_path
+        lib_path = repo_path
+    except ValueError:
+        path = "lib/%s.json" % dep
+        lib_path = "lib/%s" % dep
+
     try:
         json_data = load(open(path, "rb"))
     except Exception as e:
         from sys import exit
         print("Failed to import %s: %s" % (dep, e))
         exit(1)
-    depends   = json_data.get('depends', [])
+    depends = json_data.get('depends', [])
     commands.append("#%s.json" % dep)
     for _dep in depends:
         load_dep(_dep, commands, scripts=scripts, env=env, install_packages=install_packages, purge_packages=purge_packages, 
@@ -48,7 +76,7 @@ def load_dep(dep, commands=[], expose_ports=[], entry_points=[], scripts=[], env
             orig_command = command
             command,fnc = command_dict.get(command, ["RUN %s" % command, None])
             try:
-                command,arg = fnc(command,arg,dep)
+                command,arg = fnc(command,arg,dep,lib_path)
             except TypeError:
                 pass
             command = "%s %s" % (command, arg)
@@ -79,7 +107,7 @@ def load_dep(dep, commands=[], expose_ports=[], entry_points=[], scripts=[], env
         # Generate uuid4 name for first time setup script
         file_name = str(uuid4())
         arg = "%s /%s" % (script,file_name)
-        command,arg = process_add("add", arg, dep)
+        command,arg = process_add("add", arg, dep, lib_path)
         command = "%s %s" % (command,arg)
         commands.append(command)
         command_str = "/%s" % file_name
@@ -138,8 +166,9 @@ def load_json(json_path, dockerfile=None):
     dockerfile.extend(sub_commands)
 
     # aggregate purge commands
-    command,fnc = command_dict['purge']
-    dockerfile.append("%s %s" % (command," ".join(purge_packages)))
+    if purge_packages:
+        command,fnc = command_dict['purge']
+        dockerfile.append("%s %s" % (command," ".join(purge_packages)))
 
     dockerfile.extend([
         "RUN apt-get purge software-properties-common -y --force-yes",

@@ -1,1 +1,4 @@
 Dockerfile
+
+# Ignore git dependencies downloaded for building modules
+repos/
