@@ -5,17 +5,27 @@ from urlparse import urlparse
 
 import logging
 
-def process_add(command, arg, dep, lib_path):
+def add_to_dependency(src, dependencies):
+    from os import path,walk
+    if path.isfile(src):
+        dependencies.append(src)
+    else:
+        append = dependencies.append
+        for root,dirs,files in walk(src):
+            [append("%s/%s" % (root,file)) for file in files]
+
+def process_add(command, arg, dep, lib_path, dependencies):
     src,dst = arg.split()
     urlparts = urlparse(src)
     if not urlparts.scheme or urlparts.scheme == 'file':
         src = "%s/%s" % (lib_path,urlparts.path)
         arg = "%s %s" % (src,dst)
+        import os.path
+        add_to_dependency(src, dependencies)
     return command,arg
 
 command_dict = {
     "repo_update": ["RUN apt-get -y update --allow-unauthenticated", None],
-    "repo_add"   : ["RUN add-apt-repository -y", lambda command,arg,dep: (command,"'%s'" % arg)],
     "install"    : ["RUN apt-get install -y --force-yes --no-install-recommends", None],
     "purge"      : ["RUN apt-get purge -y --force-yes", None],
     "add"        : ["add", process_add],
@@ -23,7 +33,7 @@ command_dict = {
 }
 
 def load_dep(dep, commands=[], expose_ports=[], entry_points=[], scripts=[], env=[], workdir=[], contributors=[], maintainers=[],
-                 add_repos=[], install_packages=[], purge_packages=[]):
+                 add_repos=[], install_packages=[], purge_packages=[], dependencies=[]):
     # Check if the dependency is git repository, by default assumed to be local plugin in ./lib
     type = "local"
     lib_path = None
@@ -61,7 +71,7 @@ def load_dep(dep, commands=[], expose_ports=[], entry_points=[], scripts=[], env
     commands.append("#%s.json" % dep)
     for _dep in depends:
         load_dep(_dep, commands, scripts=scripts, env=env, install_packages=install_packages, purge_packages=purge_packages, 
-                     add_repos=add_repos, entry_points=entry_points, expose_ports=expose_ports)
+                     add_repos=add_repos, entry_points=entry_points, expose_ports=expose_ports, dependencies=dependencies)
     for command in json_data['commands']:
         try:
             command,arg = command
@@ -75,10 +85,8 @@ def load_dep(dep, commands=[], expose_ports=[], entry_points=[], scripts=[], env
             # Save for matching special commands that are not to be added global list
             orig_command = command
             command,fnc = command_dict.get(command, ["RUN %s" % command, None])
-            try:
-                command,arg = fnc(command,arg,dep,lib_path)
-            except TypeError:
-                pass
+            if fnc:
+                command,arg = fnc(command,arg,dep,lib_path,dependencies)
             command = "%s %s" % (command, arg)
             if orig_command == "repo_add":
                 add_repos.append(command)
@@ -107,7 +115,7 @@ def load_dep(dep, commands=[], expose_ports=[], entry_points=[], scripts=[], env
         # Generate uuid4 name for first time setup script
         file_name = str(uuid4())
         arg = "%s /%s" % (script,file_name)
-        command,arg = process_add("add", arg, dep, lib_path)
+        command,arg = process_add("add", arg, dep, lib_path, dependencies)
         command = "%s %s" % (command,arg)
         commands.append(command)
         command_str = "/%s" % file_name
@@ -120,7 +128,7 @@ def load_dep(dep, commands=[], expose_ports=[], entry_points=[], scripts=[], env
 
     return commands,expose_ports,entry_points,scripts,env,workdir,contributors
 
-def load_json(json_path, dockerfile=None):
+def load_json(json_path, dockerfile=None, zippath=None):
     import json
     data = load(open(json_path, "rb"))
     maintainer = data.get('maintainer')
@@ -147,10 +155,11 @@ def load_json(json_path, dockerfile=None):
     add_repos    = []
     install_packages = []
     purge_packages   = []
+    dependencies = []
     for lib in data.get('libs', []):
         load_dep(lib, expose_ports=expose_ports, entry_points=entry_points, scripts=scripts, env=env, workdir=workdir,
                      maintainers=maintainers, add_repos=add_repos, commands=sub_commands,
-                     install_packages=install_packages, purge_packages=purge_packages)
+                     install_packages=install_packages, purge_packages=purge_packages, dependencies=dependencies)
 
     # aggregate repo additions
     dockerfile.extend(add_repos)
@@ -198,6 +207,13 @@ def load_json(json_path, dockerfile=None):
     dockerfile.append("ENTRYPOINT %s" % json.dumps(["/entrypoint.sh"]))
     
     dockerfile = "\n".join([base_image]+dockerfile)
+    # Check dependencies and create a zip archive for shipping linked files
+    if zippath:
+        import zipfile
+        zipf = zipfile.ZipFile(zippath, 'w', zipfile.ZIP_DEFLATED)
+        [zipf.write(dependency) for dependency in dependencies]
+        zipf.writestr("Dockerfile", dockerfile)
+
     return dockerfile
 
 if __name__=="__main__":
@@ -206,17 +222,20 @@ if __name__=="__main__":
 
     json_file = None
     outputfile = None
+    zippath    = None
 
-    opts,args = getopt(argv[1:], "f:o:", ["file=", "outputfile="])
+    opts,args = getopt(argv[1:], "f:o:z:", ["file=", "outputfile=", "zip="])
     for opt,arg in opts:
         if opt in ['-f', '--file']:
             json_file = arg
         elif opt in ['-o', '--outputfile']:
             outputfile = arg
+        elif opt in ['-z', '--zip']:
+            zippath = arg
     if not json_file:
         print "Input file needed, -f, --file"
         exit(1)
-    out_json_file = load_json(json_file)
+    out_json_file = load_json(json_file, zippath=zippath)
     if outputfile:
         out_file = open(outputfile, "wb")
         out_file.write(out_json_file)
