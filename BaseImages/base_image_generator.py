@@ -26,6 +26,7 @@ def process_add(command, arg, dep, lib_path, dependencies):
 
 command_dict = {
     "repo_update": ["RUN apt-get -y update --allow-unauthenticated", None],
+    "repo_add"   : ["RUN add-apt-repository -y", lambda command,arg,dep,lib_path,dependencies: (command,"'%s'" % arg)],
     "install"    : ["RUN apt-get install -y --force-yes --no-install-recommends", None],
     "purge"      : ["RUN apt-get purge -y --force-yes", None],
     "add"        : ["add", process_add],
