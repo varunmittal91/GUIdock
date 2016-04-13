@@ -1,7 +1,7 @@
 {
    "maintainer": ["Varun Mittal <varun91@uw.edu>"],
    "commands": [
-       ["install", "libcurl4-openssl-dev"],
+       ["install", "libcurl4-openssl-dev libX11-dev libglu-dev libxml2-dev"],
        ["add", "packages_bench.R /tmp/packages_bench.R"],
        "Rscript /tmp/packages_bench.R",
        ["add", "testDocker /deps/testDocker"],
