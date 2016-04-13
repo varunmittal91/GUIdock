@@ -1,0 +1,14 @@
+{
+   "maintainer": ["Varun Mittal <varun91@uw.edu>"],
+   "commands": [
+       ["install", "libcurl4-openssl-dev"],
+       ["add", "packages_bench.R /tmp/packages_bench.R"],
+       "Rscript /tmp/packages_bench.R",
+       ["add", "testDocker /deps/testDocker"],
+       ["add", "cytoscape_bench.desktop /usr/share/applications/cytoscape_bench.desktop"]
+   ],
+   "env_home": "/root/",
+   "depends": [
+      "GUIdock"
+   ]
+}

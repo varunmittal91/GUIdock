@@ -1,0 +1,7 @@
+{
+   "maintainer": "Somebody <somebody@acme.com>",
+   "libs": [
+      "GUIdock",
+      "cytoscape_3_3_bench"
+   ]
+}

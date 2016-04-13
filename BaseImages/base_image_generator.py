@@ -34,7 +34,12 @@ command_dict = {
 }
 
 def load_dep(dep, commands=[], expose_ports=[], entry_points=[], scripts=[], env=[], workdir=[], contributors=[], maintainers=[],
-                 add_repos=[], install_packages=[], purge_packages=[], dependencies=[]):
+                 add_repos=[], install_packages=[], purge_packages=[], dependencies=[], installed_dependencies=[]):
+    # Check if dependency already installed
+    if dep in installed_dependencies:
+        return
+    installed_dependencies.append(dep)
+
     # Check if the dependency is git repository, by default assumed to be local plugin in ./lib
     type = "local"
     lib_path = None
@@ -72,7 +77,8 @@ def load_dep(dep, commands=[], expose_ports=[], entry_points=[], scripts=[], env
     commands.append("#%s.json" % dep)
     for _dep in depends:
         load_dep(_dep, commands, scripts=scripts, env=env, install_packages=install_packages, purge_packages=purge_packages, 
-                     add_repos=add_repos, entry_points=entry_points, expose_ports=expose_ports, dependencies=dependencies)
+                     add_repos=add_repos, entry_points=entry_points, expose_ports=expose_ports, dependencies=dependencies, 
+                     installed_dependencies=installed_dependencies)
     for command in json_data['commands']:
         try:
             command,arg = command
@@ -157,10 +163,12 @@ def load_json(json_path, dockerfile=None, zippath=None):
     install_packages = []
     purge_packages   = []
     dependencies = []
+    installed_dependencies = []
     for lib in data.get('libs', []):
         load_dep(lib, expose_ports=expose_ports, entry_points=entry_points, scripts=scripts, env=env, workdir=workdir,
                      maintainers=maintainers, add_repos=add_repos, commands=sub_commands,
-                     install_packages=install_packages, purge_packages=purge_packages, dependencies=dependencies)
+                     install_packages=install_packages, purge_packages=purge_packages, dependencies=dependencies, 
+                     installed_dependencies=installed_dependencies)
 
     # aggregate repo additions
     dockerfile.extend(add_repos)
